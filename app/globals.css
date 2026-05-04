@@ -1,13 +1,71 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #000000;
+@theme {
+  --color-primary-50: #fbf8eb;
+  --color-primary-100: #f6efce;
+  --color-primary-200: #eedda1;
+  --color-primary-300: #e5c56c;
+  --color-primary-400: #dfb143;
+  --color-primary-500: #d69828;
+  --color-primary-600: #bc7920;
+  --color-primary-700: #965a1c;
+  --color-primary-800: #7b481c;
+  --color-primary-900: #643c1b;
+  --color-primary-950: #391f0b;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-arabic: 'Cairo', 'Tajawal', system-ui, sans-serif;
 }
 
-body {
-  background: white;
-  color: black;
+@layer base {
+  :root {
+    --background: #fdfbf7;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --border: #e2e8f0;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+}
+
+/* Gradient Text */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, #bc7920, #d69828);
+}
+
+/* Smooth Image Hover */
+.image-hover-zoom {
+  transition: transform 0.5s ease;
+}
+.image-hover-zoom:hover {
+  transform: scale(1.05);
 }
