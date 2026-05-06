@@ -3,14 +3,27 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, Menu, X, Globe } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from './LanguageProvider';
 import { useCart } from './CartProvider';
+import { supabase } from '@/lib/supabase';
+import { UserCircle } from 'lucide-react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const { lang, toggleLanguage } = useLanguage();
   const { itemCount, setIsCartOpen } = useCart();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isAr = lang === 'ar';
 
@@ -47,6 +60,15 @@ export default function Navbar() {
               <span className="font-semibold text-sm">{isAr ? 'English' : 'عربي'}</span>
             </button>
 
+            {user && (
+              <Link href="/profile" className="flex items-center gap-2 text-foreground hover:text-primary-600 transition-colors bg-black/5 px-3 py-1.5 rounded-full">
+                <UserCircle className="h-5 w-5" />
+                <span className="font-semibold text-sm">
+                  {isAr ? 'سجل العمليات' : 'Transaction History'}
+                </span>
+              </Link>
+            )}
+
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-full transition-all shadow-md hover:shadow-lg">
               <ShoppingCart className="h-5 w-5" />
               <span className="font-semibold">{itemCount}</span>
@@ -55,6 +77,11 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <div className={`md:hidden flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+            {user && (
+              <Link href="/profile" className="p-2 text-primary-600 bg-black/5 rounded-full transition-colors font-bold text-sm">
+                <UserCircle className="h-5 w-5" />
+              </Link>
+            )}
             <button onClick={toggleLanguage} className="p-2 text-primary-600 bg-black/5 rounded-full transition-colors font-bold text-sm">
               {isAr ? 'EN' : 'AR'}
             </button>

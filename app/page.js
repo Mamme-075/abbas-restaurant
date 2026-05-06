@@ -15,8 +15,18 @@ export default function Home() {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedDesc, setExpandedDesc] = useState({});
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      fetchMenu();
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
     async function fetchMenu() {
       const { data, error } = await supabase.from('menu_items').select('*').order('created_at', { ascending: false });
       if (!error && data) setMenuItems(data);
@@ -27,6 +37,14 @@ export default function Home() {
 
   const toggleDesc = (id) => {
     setExpandedDesc(prev => ({...prev, [id]: !prev[id]}));
+  };
+
+  const handleAddToCart = (item) => {
+    if (!session) {
+      window.location.href = '/login';
+    } else {
+      addToCart(item);
+    }
   };
 
   return (
@@ -123,7 +141,7 @@ export default function Home() {
                     </div>
                     
                     <button 
-                      onClick={() => addToCart(item)}
+                      onClick={() => handleAddToCart(item)}
                       className="w-full bg-black hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-auto"
                     >
                       <ShoppingCart className="h-5 w-5" />
