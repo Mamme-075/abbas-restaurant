@@ -224,23 +224,23 @@ export default function Home() {
       </section>
 
       {/* Footer / Contact */}
-      <footer className="bg-gray-900 text-white py-16 mt-10">
+      <footer className="bg-white border-t border-gray-100 py-20 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-start">
           <div className={isAr ? 'md:text-right' : 'md:text-left'}>
-            <div className="flex items-center gap-3 mb-6 justify-center md:justify-start" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
-              <div className="relative h-12 w-12 rounded-full overflow-hidden bg-white">
-                <Image src="/logo.jpg" alt="Logo" fill className="object-contain" />
+            <div className="flex items-center gap-4 mb-6 justify-center md:justify-start" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
+              <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-white border border-gray-100">
+                <Image src="/logo.jpg" alt="Logo" fill className="object-contain p-1" />
               </div>
-              <h4 className="text-2xl font-black text-white">{isAr ? 'مطعم عباس' : 'Abbas Restaurant'}</h4>
+              <h4 className="text-2xl font-black text-gray-900">{isAr ? 'مطعم عباس' : 'Abbas'}</h4>
             </div>
-            <p className="text-gray-400 leading-relaxed">
+            <p className="text-gray-500 leading-relaxed font-medium">
               {isAr ? 'نقدم أفضل الأطباق العربية المحضرة يومياً من أجود المكونات الطازجة لضمان تجربة طعام استثنائية.' : 'Serving the best Arabic dishes prepared daily with the finest fresh ingredients to ensure an exceptional dining experience.'}
             </p>
           </div>
           
           <div className={`flex flex-col items-center ${isAr ? 'md:items-end' : 'md:items-start'}`}>
-            <h4 className="text-xl font-bold mb-6 text-primary-400">{isAr ? 'تواصل معنا' : 'Contact Us'}</h4>
-            <div className="space-y-4 text-gray-400">
+            <h4 className="text-lg font-bold mb-6 text-gray-900">{isAr ? 'تواصل معنا' : 'Contact Us'}</h4>
+            <div className="space-y-4 text-gray-500 font-medium">
               <p className="flex items-center gap-3" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
                 <Phone className="h-5 w-5 text-primary-500" /> +966 50 000 0000
               </p>
@@ -251,17 +251,17 @@ export default function Home() {
           </div>
           
           <div className={`flex flex-col items-center ${isAr ? 'md:items-end' : 'md:items-start'}`}>
-            <h4 className="text-xl font-bold mb-6 text-primary-400">{isAr ? 'ساعات العمل' : 'Opening Hours'}</h4>
-            <div className="space-y-4 text-gray-400">
-              <p className="flex justify-between w-48 font-medium">
+            <h4 className="text-lg font-bold mb-6 text-gray-900">{isAr ? 'ساعات العمل' : 'Opening Hours'}</h4>
+            <div className="space-y-4 text-gray-500 font-medium">
+              <p className="flex justify-between w-48">
                 <span>{isAr ? 'يومياً' : 'Daily'}</span>
-                <span className="text-white">8:00 - 00:00</span>
+                <span className="text-gray-900 font-bold">8:00 - 00:00</span>
               </p>
             </div>
           </div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-gray-100 text-center text-gray-400 text-sm font-medium">
           <p>© {new Date().getFullYear()} {isAr ? 'مطعم عباس. جميع الحقوق محفوظة.' : 'Abbas Restaurant. All rights reserved.'}</p>
         </div>
       </footer>
