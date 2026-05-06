@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  /* Sunset Orange Palette */
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316;
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
-  --color-primary-950: #431407;
+  /* Abbas Exact Orange Palette (Darkened for solid buttons) */
+  --color-primary-50: #fdf5f1;
+  --color-primary-100: #fbe6dd;
+  --color-primary-200: #f6cbb9;
+  --color-primary-300: #efab8e;
+  --color-primary-400: #e57c48;
+  --color-primary-500: #c85a17; /* Dark burnt orange */
+  --color-primary-600: #a64b13;
+  --color-primary-700: #883e10;
+  --color-primary-800: #6b310d;
+  --color-primary-900: #54270b;
+  --color-primary-950: #301505;
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-arabic: 'Cairo', 'Tajawal', system-ui, sans-serif;
@@ -69,7 +69,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(to right, #ea580c, #f97316);
+  background-image: linear-gradient(to right, #a64b13, #c85a17);
 }
 
 /* Smooth Image Hover */

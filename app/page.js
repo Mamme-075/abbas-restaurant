@@ -70,7 +70,7 @@ export default function Home() {
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20 bg-primary-50">🍲</div>
           )}
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-primary-900 font-bold px-4 py-2 rounded-full shadow-lg">
+          <div className="absolute top-4 right-4 bg-primary-500 text-white font-bold text-sm px-3 py-1 rounded-md shadow-md">
             {item.price} {isAr ? 'ريال' : 'SAR'}
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function Home() {
             className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-auto shadow-md hover:shadow-lg cursor-pointer ${
               isAdded 
                 ? 'bg-green-500 text-white' 
-                : 'bg-black hover:bg-gray-800 text-white'
+                : 'bg-primary-500 hover:bg-primary-600 text-white'
             }`}
           >
             {isAdded ? (
@@ -139,7 +139,7 @@ export default function Home() {
               </div>
           </div>
           <h1 className="text-5xl md:text-8xl font-black mb-6 text-white drop-shadow-xl tracking-tight">
-            {isAr ? 'مطعم عباس' : 'ABBAS'}
+            {isAr ? 'مطاعم عباس' : 'ABBAS'}
           </h1>
           <p className="text-xl md:text-3xl text-gray-200 mb-10 max-w-2xl mx-auto font-medium drop-shadow-md">
             {isAr 
@@ -165,7 +165,7 @@ export default function Home() {
             <div className={`h-1 w-20 bg-primary-500 rounded-full ${isAr ? 'ml-auto' : ''}`}></div>
             <p className="text-lg text-gray-600 leading-relaxed">
               {isAr 
-                ? 'بدأت رحلتنا من شغف عميق بالطهي وتقديم أفضل المأكولات العربية. نحن في مطعم عباس نؤمن بأن الطعام ليس مجرد وجبة، بل هو تجربة تجمع العائلة والأصدقاء. نستخدم أجود المكونات الطازجة والتوابل الأصيلة لنقدم لكم مذاقاً لا ينسى.' 
+                ? 'بدأت رحلتنا من شغف عميق بالطهي وتقديم أفضل المأكولات العربية. نحن في مطاعم عباس نؤمن بأن الطعام ليس مجرد وجبة، بل هو تجربة تجمع العائلة والأصدقاء. نستخدم أجود المكونات الطازجة والتوابل الأصيلة لنقدم لكم مذاقاً لا ينسى.' 
                 : 'Our journey began with a deep passion for cooking and serving the best Arabic cuisine. At Abbas Restaurant, we believe that food is not just a meal, but an experience that brings family and friends together. We use the finest fresh ingredients and authentic spices to give you an unforgettable taste.'}
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function Home() {
             <div className="mt-12 text-center">
               <Link 
                 href="/menu"
-                className="bg-gray-900 hover:bg-gray-800 text-white px-10 py-4 rounded-full text-lg font-bold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 inline-flex items-center gap-3"
+                className="bg-primary-500 hover:bg-primary-600 text-white px-10 py-4 rounded-full text-lg font-bold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 inline-flex items-center gap-3"
               >
                 {isAr ? 'عرض القائمة الكاملة' : 'View Full Menu'}
                 <ArrowRight className={`h-5 w-5 ${isAr ? 'rotate-180' : ''}`} />
@@ -231,7 +231,7 @@ export default function Home() {
               <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-white border border-gray-100">
                 <Image src="/logo.jpg" alt="Logo" fill className="object-contain p-1" />
               </div>
-              <h4 className="text-2xl font-black text-gray-900">{isAr ? 'مطعم عباس' : 'Abbas'}</h4>
+              <h4 className="text-2xl font-black text-gray-900">{isAr ? 'مطاعم عباس' : 'Abbas'}</h4>
             </div>
             <p className="text-gray-500 leading-relaxed font-medium">
               {isAr ? 'نقدم أفضل الأطباق العربية المحضرة يومياً من أجود المكونات الطازجة لضمان تجربة طعام استثنائية.' : 'Serving the best Arabic dishes prepared daily with the finest fresh ingredients to ensure an exceptional dining experience.'}
@@ -262,7 +262,7 @@ export default function Home() {
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-gray-100 text-center text-gray-400 text-sm font-medium">
-          <p>© {new Date().getFullYear()} {isAr ? 'مطعم عباس. جميع الحقوق محفوظة.' : 'Abbas Restaurant. All rights reserved.'}</p>
+          <p>© {new Date().getFullYear()} {isAr ? 'مطاعم عباس. جميع الحقوق محفوظة.' : 'Abbas Restaurant. All rights reserved.'}</p>
         </div>
       </footer>
     </div>

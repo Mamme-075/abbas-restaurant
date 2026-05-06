@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-sans' });
 const cairo = Cairo({ subsets: ["arabic"], variable: '--font-arabic' });
 
 export const metadata = {
-  title: "Abbas Restaurant | مطعم عباس",
+  title: "Abbas Restaurant | مطاعم عباس",
   description: "Authentic Arabic Cuisine in Saudi Arabia",
 };
 

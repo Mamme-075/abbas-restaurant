@@ -40,7 +40,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-xl tracking-wider text-gradient uppercase">
-                  {isAr ? 'مطعم عباس' : 'Abbas'}
+                  {isAr ? 'مطاعم عباس' : 'Abbas'}
                 </span>
               </div>
             </Link>

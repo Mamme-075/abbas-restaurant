@@ -141,7 +141,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button disabled={loading} type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3.5 rounded-xl transition-colors mt-6 flex justify-center items-center">
+          <button disabled={loading} type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 rounded-xl transition-colors mt-6 flex justify-center items-center">
             {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (isRegistering ? (isAr ? 'إنشاء حساب' : 'Sign Up') : (isAr ? 'دخول' : 'Sign In'))}
           </button>
         </form>

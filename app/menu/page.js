@@ -63,7 +63,7 @@ export default function MenuPage() {
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20 bg-primary-50">🍲</div>
           )}
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-primary-900 font-bold px-4 py-2 rounded-full shadow-lg">
+          <div className="absolute top-4 right-4 bg-primary-500 text-white font-bold text-sm px-3 py-1 rounded-md shadow-md">
             {item.price} {isAr ? 'ريال' : 'SAR'}
           </div>
         </div>
@@ -99,10 +99,10 @@ export default function MenuPage() {
           <button 
             onClick={() => handleAddToCart(item)}
             disabled={isAdded}
-            className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-auto shadow-md hover:shadow-lg cursor-pointer ${
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 mt-auto shadow-sm hover:shadow-md cursor-pointer ${
               isAdded 
                 ? 'bg-green-500 text-white' 
-                : 'bg-black hover:bg-gray-800 text-white'
+                : 'bg-primary-500 hover:bg-primary-600 text-white'
             }`}
           >
             {isAdded ? (
