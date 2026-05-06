@@ -6,6 +6,7 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState('en');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('app_lang');
@@ -14,6 +15,7 @@ export function LanguageProvider({ children }) {
       document.documentElement.dir = saved === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = saved;
     }
+    setMounted(true);
   }, []);
 
   const toggleLanguage = () => {
@@ -23,6 +25,9 @@ export function LanguageProvider({ children }) {
     document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = newLang;
   };
+
+  // Prevent flash of English content before localStorage is read
+  if (!mounted) return null;
 
   return (
     <LanguageContext.Provider value={{ lang, toggleLanguage }}>

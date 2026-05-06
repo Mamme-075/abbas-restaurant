@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/components/LanguageProvider';
-import { Loader2, Package, LogOut, User as UserIcon } from 'lucide-react';
+import { Loader2, Package, LogOut, User as UserIcon, Trash2, X } from 'lucide-react';
 
 export default function ProfilePage() {
   const { lang } = useLanguage();
@@ -12,6 +12,9 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     async function loadProfile() {
@@ -39,6 +42,32 @@ export default function ProfilePage() {
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.href = '/login';
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const res = await fetch('/api/user/delete', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete account');
+
+      await supabase.auth.signOut();
+      window.location.href = '/login';
+    } catch (err) {
+      console.error(err);
+      setDeleteError(isAr ? 'حدث خطأ أثناء حذف الحساب' : 'An error occurred while deleting your account.');
+      setIsDeleting(false);
+    }
   }
 
   if (loading) {
@@ -126,6 +155,69 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Delete Account Section */}
+      <div className={`mt-12 pt-8 border-t border-red-100 ${isAr ? 'text-right' : 'text-left'}`}>
+        <h3 className="text-lg font-bold text-red-600 mb-2">{isAr ? 'منطقة الخطر' : 'Danger Zone'}</h3>
+        <p className="text-gray-500 text-sm mb-4">
+          {isAr 
+            ? 'بموجب نظام حماية البيانات الشخصية (PDPL)، يحق لك حذف حسابك وكافة بياناتك المسجلة لدينا نهائياً.' 
+            : 'Under the PDPL, you have the right to permanently delete your account and all associated data.'}
+        </p>
+        <button 
+          onClick={() => setShowDeleteModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-bold text-sm"
+          style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+        >
+          <Trash2 className="h-4 w-4" />
+          {isAr ? 'حذف الحساب نهائياً' : 'Permanently Delete Account'}
+        </button>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className={`bg-white rounded-3xl p-8 max-w-md w-full relative ${isAr ? 'text-right' : 'text-left'}`}>
+            <button onClick={() => !isDeleting && setShowDeleteModal(false)} className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} p-2 bg-gray-100 hover:bg-gray-200 rounded-full`}>
+              <X className="h-5 w-5" />
+            </button>
+            <div className={`flex items-center gap-3 mb-4 text-red-600 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <Trash2 className="h-8 w-8" />
+              <h2 className="text-2xl font-bold">{isAr ? 'تأكيد الحذف' : 'Confirm Deletion'}</h2>
+            </div>
+            
+            <p className="text-gray-600 mb-6 font-medium">
+              {isAr 
+                ? 'هل أنت متأكد؟ هذا الإجراء لا يمكن التراجع عنه. سيتم مسح اسمك وبريدك الإلكتروني ورقم جوالك من خوادمنا بشكل دائم.' 
+                : 'Are you sure? This action cannot be undone. Your name, email, and phone number will be permanently wiped from our servers.'}
+            </p>
+
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {deleteError}
+              </div>
+            )}
+
+            <div className={`flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
+              >
+                {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isAr ? 'نعم، احذف حسابي' : 'Yes, delete my account'}
+              </button>
+              <button 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-800 font-bold py-3 rounded-xl transition-colors"
+              >
+                {isAr ? 'إلغاء' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

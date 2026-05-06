@@ -4,7 +4,8 @@ import { useCart } from './CartProvider';
 import { useLanguage } from './LanguageProvider';
 import { X, Minus, Plus, ShoppingBag, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function CartSidebar() {
   const { cart, removeFromCart, updateQuantity, cartTotal, isCartOpen, setIsCartOpen } = useCart();
@@ -16,6 +17,15 @@ export default function CartSidebar() {
 
   const handleCheckout = async () => {
     setCheckingOut(true);
+    
+    // Check if user is logged in before allowing checkout
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setIsCartOpen(false); // Close the cart sidebar
+      window.location.href = '/login'; // Force them to login/register
+      return;
+    }
+
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',

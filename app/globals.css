@@ -54,6 +54,15 @@
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
 }
 
+/* Hide scrollbar for the horizontal carousel */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Gradient Text */
 .text-gradient {
   background-clip: text;
