@@ -11,24 +11,24 @@ export default function Home() {
   const { lang } = useLanguage();
   const isAr = lang === 'ar';
 
-  const [menuItems, setMenuItems] = useState([]);
   const [popularItems, setPopularItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedDesc, setExpandedDesc] = useState({});
-  const [showFullMenu, setShowFullMenu] = useState(false);
+  const [siteSettings, setSiteSettings] = useState(null);
 
   useEffect(() => {
+    async function fetchData() {
+      // Fetch site settings
+      const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).single();
+      if (settingsData) setSiteSettings(settingsData);
 
-    async function fetchMenu() {
-      const { data, error } = await supabase.from('menu_items').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        setMenuItems(data);
-        // Just take the first 5 items as "popular" for now
-        setPopularItems(data.slice(0, 5));
-      }
+      // Fetch popular items
+      const { data: menuData } = await supabase.from('menu_items').select('*').eq('is_popular', true).order('created_at', { ascending: false });
+      if (menuData) setPopularItems(menuData);
+      
       setLoading(false);
     }
-    fetchMenu();
+    fetchData();
   }, []);
 
   const toggleDesc = (id) => {
@@ -91,7 +91,7 @@ export default function Home() {
       <section className="relative h-[75vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0 bg-black">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
-          <Image src="/shaw.jpg" alt="Restaurant Background" fill className="object-cover opacity-60" priority />
+          <Image src={siteSettings?.hero_image_url || "/shaw.jpg"} alt="Restaurant Background" fill className="object-cover opacity-60" priority />
         </div>
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-20">
@@ -101,12 +101,12 @@ export default function Home() {
               </div>
           </div>
           <h1 className="text-5xl md:text-8xl font-black mb-6 text-white drop-shadow-xl tracking-tight">
-            {isAr ? 'مطاعم عباس' : 'ABBAS'}
+            {isAr ? (siteSettings?.hero_title_ar || 'مطاعم عباس') : (siteSettings?.hero_title_en || 'ABBAS')}
           </h1>
           <p className="text-xl md:text-3xl text-gray-200 mb-10 max-w-2xl mx-auto font-medium drop-shadow-md">
             {isAr 
-              ? 'تذوق المعنى الحقيقي للأصالة' 
-              : 'Taste the true meaning of authenticity'}
+              ? (siteSettings?.hero_subtitle_ar || 'تذوق المعنى الحقيقي للأصالة') 
+              : (siteSettings?.hero_subtitle_en || 'Taste the true meaning of authenticity')}
           </p>
           <a href="#popular" className="inline-block bg-primary-600 hover:bg-primary-500 text-white px-10 py-4 rounded-full text-lg font-bold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1">
             {isAr ? 'اطلب الآن' : 'Order Now'}
@@ -133,7 +133,7 @@ export default function Home() {
           </div>
           <div className="flex-1 w-full">
             <div className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden shadow-lg">
-              <Image src="/shaw.jpg" alt="Our Kitchen" fill className="object-cover" />
+              <Image src={siteSettings?.hero_image_url || "/shaw.jpg"} alt="Our Kitchen" fill className="object-cover" />
             </div>
           </div>
         </div>
@@ -159,6 +159,10 @@ export default function Home() {
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="h-12 w-12 animate-spin text-primary-500" />
+            </div>
+          ) : popularItems.length === 0 ? (
+            <div className="text-center py-20 text-gray-500 bg-gray-50 rounded-3xl border border-gray-100">
+              <p className="text-xl">{isAr ? 'لم يتم تحديد أي أصناف كأكثر ترويجاً بعد.' : 'No popular items have been selected yet.'}</p>
             </div>
           ) : (
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-10 hide-scrollbar" style={{ scrollBehavior: 'smooth' }}>

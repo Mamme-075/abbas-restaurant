@@ -2,8 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Star, Image as ImageIcon, Settings } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
+
+export const CATEGORIES = [
+  { en: 'Foul', ar: 'فول', icon: '🍲' },
+  { en: 'Gallaba', ar: 'قلابة', icon: '🥘' },
+  { en: 'Shawarma', ar: 'شاورما', icon: '🌯' },
+  { en: 'Grills', ar: 'مشاوي', icon: '🥩' },
+  { en: 'Masoub', ar: 'معصوب', icon: '🍌' },
+  { en: 'Muttabak', ar: 'مطبق', icon: '🫓' },
+  { en: 'Drinks', ar: 'مشروبات', icon: '🥤' },
+  { en: 'Extras', ar: 'إضافات', icon: '🍟' },
+];
 
 export default function AdminPage() {
   const { lang } = useLanguage();
@@ -18,21 +29,37 @@ export default function AdminPage() {
   // Dashboard state
   const [menuItems, setMenuItems] = useState([]);
   const [newItem, setNewItem] = useState({
-    name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', category_en: 'Main Course', category_ar: 'الطبق الرئيسي'
+    name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', 
+    category_en: CATEGORIES[0].en, category_ar: CATEGORIES[0].ar, is_popular: false
   });
   const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Site Settings State
+  const [siteSettings, setSiteSettings] = useState({
+    hero_title_en: 'ABBAS', hero_title_ar: 'مطاعم عباس',
+    hero_subtitle_en: 'Taste the true meaning of authenticity', hero_subtitle_ar: 'تذوق المعنى الحقيقي للأصالة',
+    hero_image_url: ''
+  });
+  const [settingsImageFile, setSettingsImageFile] = useState(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchMenuItems();
+      if (session) {
+        fetchMenuItems();
+        fetchSiteSettings();
+      }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchMenuItems();
+      if (session) {
+        fetchMenuItems();
+        fetchSiteSettings();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -54,6 +81,47 @@ export default function AdminPage() {
   async function fetchMenuItems() {
     const { data, error } = await supabase.from('menu_items').select('*').order('created_at', { ascending: false });
     if (!error && data) setMenuItems(data);
+  }
+
+  async function fetchSiteSettings() {
+    const { data, error } = await supabase.from('site_settings').select('*').limit(1).single();
+    if (!error && data) setSiteSettings(data);
+  }
+
+  async function handleSaveSettings(e) {
+    e.preventDefault();
+    setSavingSettings(true);
+    let uploadedImageUrl = siteSettings.hero_image_url;
+
+    if (settingsImageFile) {
+      const fileExt = settingsImageFile.name.split('.').pop();
+      const fileName = `hero_${Math.random()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('menu-images').upload(fileName, settingsImageFile);
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage.from('menu-images').getPublicUrl(fileName);
+        uploadedImageUrl = publicUrl;
+      } else {
+        alert("Error uploading image: " + uploadError.message);
+        setSavingSettings(false);
+        return;
+      }
+    }
+
+    const newSettings = { ...siteSettings, hero_image_url: uploadedImageUrl };
+    
+    // Check if we need to insert or update
+    const { data: existing } = await supabase.from('site_settings').select('id').limit(1).single();
+    if (existing) {
+      await supabase.from('site_settings').update(newSettings).eq('id', existing.id);
+    } else {
+      await supabase.from('site_settings').insert([newSettings]);
+    }
+    
+    setSiteSettings(newSettings);
+    setSettingsImageFile(null);
+    document.getElementById('hero-upload').value = '';
+    alert(isAr ? 'تم حفظ إعدادات الموقع!' : 'Site settings saved successfully!');
+    setSavingSettings(false);
   }
 
   async function handleAddItem(e) {
@@ -84,7 +152,10 @@ export default function AdminPage() {
     
     if (!error && data) {
       setMenuItems([data[0], ...menuItems]);
-      setNewItem({ name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', category_en: 'Main Course', category_ar: 'الطبق الرئيسي' });
+      setNewItem({ 
+        name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', 
+        category_en: CATEGORIES[0].en, category_ar: CATEGORIES[0].ar, is_popular: false 
+      });
       setImageFile(null);
       document.getElementById('image-upload').value = '';
     } else if (error) {
@@ -100,6 +171,19 @@ export default function AdminPage() {
       setMenuItems(menuItems.filter(item => item.id !== id));
     }
   }
+
+  async function togglePopular(id, currentStatus) {
+    const { error } = await supabase.from('menu_items').update({ is_popular: !currentStatus }).eq('id', id);
+    if (!error) {
+      setMenuItems(menuItems.map(item => item.id === id ? { ...item, is_popular: !currentStatus } : item));
+    }
+  }
+
+  const handleCategoryChange = (e) => {
+    const selectedEn = e.target.value;
+    const cat = CATEGORIES.find(c => c.en === selectedEn);
+    setNewItem({ ...newItem, category_en: cat.en, category_ar: cat.ar });
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary-500 h-10 w-10" /></div>;
@@ -155,12 +239,57 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className={`flex justify-between items-center mb-10 ${isAr ? 'flex-row-reverse' : ''}`}>
         <div className={isAr ? 'text-right' : 'text-left'}>
-          <h1 className="text-3xl font-bold text-gradient">{isAr ? 'لوحة تحكم القائمة' : 'Menu Dashboard'}</h1>
-          <p className="text-gray-500 mt-1">{isAr ? 'إدارة أصناف المطعم' : 'Manage your restaurant offerings'}</p>
+          <h1 className="text-3xl font-bold text-gradient">{isAr ? 'لوحة تحكم القائمة' : 'Admin Dashboard'}</h1>
+          <p className="text-gray-500 mt-1">{isAr ? 'إدارة إعدادات الموقع وقائمة الطعام' : 'Manage your site settings and menu'}</p>
         </div>
         <button onClick={handleLogout} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
           {isAr ? 'تسجيل خروج' : 'Sign Out'}
         </button>
+      </div>
+
+      {/* Site Settings Section */}
+      <div className="glass-card p-6 rounded-2xl mb-8">
+        <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+          <Settings className="text-primary-500" /> {isAr ? 'إعدادات الصفحة الرئيسية' : 'Landing Page Settings'}
+        </h2>
+        <form onSubmit={handleSaveSettings} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{isAr ? 'العنوان الرئيسي بالإنجليزية' : 'Main Title (English)'}</label>
+              <input required type="text" value={siteSettings.hero_title_en} onChange={e => setSiteSettings({...siteSettings, hero_title_en: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+            </div>
+            <div dir="rtl">
+              <label className="block text-xs text-gray-500 mb-1">{isAr ? 'العنوان الرئيسي بالعربي' : 'Main Title (Arabic)'}</label>
+              <input required type="text" value={siteSettings.hero_title_ar} onChange={e => setSiteSettings({...siteSettings, hero_title_ar: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{isAr ? 'النص الفرعي بالإنجليزية' : 'Subtitle (English)'}</label>
+              <input required type="text" value={siteSettings.hero_subtitle_en} onChange={e => setSiteSettings({...siteSettings, hero_subtitle_en: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+            </div>
+            <div dir="rtl">
+              <label className="block text-xs text-gray-500 mb-1">{isAr ? 'النص الفرعي بالعربي' : 'Subtitle (Arabic)'}</label>
+              <input required type="text" value={siteSettings.hero_subtitle_ar} onChange={e => setSiteSettings({...siteSettings, hero_subtitle_ar: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{isAr ? 'صورة الخلفية (اختياري)' : 'Background Image (Optional)'}</label>
+            <div className="flex items-center gap-4">
+              {siteSettings.hero_image_url && !settingsImageFile && (
+                <img src={siteSettings.hero_image_url} alt="Current hero" className="h-12 w-20 object-cover rounded" />
+              )}
+              <input 
+                id="hero-upload"
+                type="file" 
+                accept="image/*"
+                onChange={e => setSettingsImageFile(e.target.files[0])} 
+                className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" 
+              />
+            </div>
+          </div>
+          <button disabled={savingSettings} type="submit" className="bg-gray-900 hover:bg-black text-white px-6 py-2 rounded transition-colors flex items-center justify-center gap-2 mt-4 text-sm font-semibold">
+            {savingSettings ? <Loader2 className="animate-spin h-4 w-4" /> : (isAr ? 'حفظ الإعدادات' : 'Save Settings')}
+          </button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -168,7 +297,7 @@ export default function AdminPage() {
         <div className="lg:col-span-1">
           <div className="glass-card p-6 rounded-2xl sticky top-24">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Plus className="text-primary-500" /> {isAr ? 'إضافة صنف جديد' : 'Add New Item'}
+              <Plus className="text-primary-500" /> {isAr ? 'إضافة صنف جديد' : 'Add New Menu Item'}
             </h2>
             <form onSubmit={handleAddItem} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -182,9 +311,25 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">{isAr ? 'السعر (ريال) *' : 'Price (SAR) *'}</label>
-                <input required type="number" step="0.01" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">{isAr ? 'التصنيف *' : 'Category *'}</label>
+                  <select 
+                    value={newItem.category_en} 
+                    onChange={handleCategoryChange}
+                    className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat.en} value={cat.en}>
+                        {cat.icon} {isAr ? cat.ar : cat.en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">{isAr ? 'السعر (ريال) *' : 'Price (SAR) *'}</label>
+                  <input required type="number" step="0.01" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black" />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -207,6 +352,20 @@ export default function AdminPage() {
                   onChange={e => setImageFile(e.target.files[0])} 
                   className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" 
                 />
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="is_popular" 
+                  checked={newItem.is_popular} 
+                  onChange={e => setNewItem({...newItem, is_popular: e.target.checked})}
+                  className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                />
+                <label htmlFor="is_popular" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                  {isAr ? 'إضافة إلى الأكثر ترويجاً' : 'Mark as Popular'}
+                </label>
               </div>
 
               <button disabled={saving} type="submit" className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 rounded transition-colors flex justify-center items-center gap-2 mt-4">
@@ -232,19 +391,29 @@ export default function AdminPage() {
                   {item.image_url ? (
                     <img src={item.image_url} alt={item.name_en} className="h-16 w-16 object-cover rounded-lg" />
                   ) : (
-                    <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                      🍲
+                    <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl text-gray-400">
+                      <ImageIcon className="h-8 w-8" />
                     </div>
                   )}
                   <div>
                     <h3 className={`font-bold text-foreground text-lg flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
                       {item.name_en} <span className="text-gray-300 text-sm font-normal">|</span> <span dir="rtl" className="font-arabic">{item.name_ar}</span>
                     </h3>
-                    <p className="text-primary-600 font-semibold">{item.price} {isAr ? 'ريال' : 'SAR'}</p>
+                    <div className={`flex items-center gap-3 mt-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      <p className="text-primary-600 font-semibold">{item.price} {isAr ? 'ريال' : 'SAR'}</p>
+                      <span className="text-gray-400 text-xs px-2 py-0.5 bg-gray-100 rounded-full">{isAr ? item.category_ar : item.category_en}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => togglePopular(item.id, item.is_popular)} 
+                    title={isAr ? 'الأكثر ترويجاً' : 'Popular'}
+                    className={`p-2 rounded-lg transition-colors ${item.is_popular ? 'text-yellow-400 bg-yellow-50 hover:bg-yellow-100' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-50'}`}
+                  >
+                    <Star className={`h-5 w-5 ${item.is_popular ? 'fill-current' : ''}`} />
+                  </button>
+                  <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                     <Trash2 className="h-5 w-5" />
                   </button>
                 </div>
