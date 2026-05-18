@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Plus, Trash2, Star, Image as ImageIcon, Settings } from 'lucide-react';
+import { Loader2, Plus, Trash2, Star, Image as ImageIcon, Settings, Edit } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export const CATEGORIES = [
@@ -34,6 +34,7 @@ export default function AdminPage() {
   });
   const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
 
   // Site Settings State
   const [siteSettings, setSiteSettings] = useState({
@@ -146,22 +147,51 @@ export default function AdminPage() {
       uploadedImageUrl = publicUrl;
     }
 
-    const { data, error } = await supabase.from('menu_items').insert([
-      { ...newItem, price: parseFloat(newItem.price), image_url: uploadedImageUrl }
-    ]).select();
-    
-    if (!error && data) {
-      setMenuItems([data[0], ...menuItems]);
-      setNewItem({ 
-        name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', 
-        category_en: CATEGORIES[0].en, category_ar: CATEGORIES[0].ar, is_popular: false 
-      });
-      setImageFile(null);
-      document.getElementById('image-upload').value = '';
-    } else if (error) {
-      alert("Error adding item: " + error.message);
+    const payload = { ...newItem, price: parseFloat(newItem.price) };
+    if (uploadedImageUrl) {
+      payload.image_url = uploadedImageUrl;
+    }
+
+    if (editingItemId) {
+      const { data, error } = await supabase.from('menu_items').update(payload).eq('id', editingItemId).select();
+      if (!error && data) {
+        setMenuItems(menuItems.map(item => item.id === editingItemId ? data[0] : item));
+        handleCancelEdit();
+      } else if (error) {
+        alert("Error updating item: " + error.message);
+      }
+    } else {
+      const { data, error } = await supabase.from('menu_items').insert([payload]).select();
+      if (!error && data) {
+        setMenuItems([data[0], ...menuItems]);
+        handleCancelEdit();
+      } else if (error) {
+        alert("Error adding item: " + error.message);
+      }
     }
     setSaving(false);
+  }
+
+  function handleEdit(item) {
+    setEditingItemId(item.id);
+    setNewItem({
+      name_en: item.name_en, name_ar: item.name_ar, 
+      description_en: item.description_en || '', description_ar: item.description_ar || '', 
+      price: item.price, category_en: item.category_en, category_ar: item.category_ar, 
+      is_popular: item.is_popular || false
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleCancelEdit() {
+    setEditingItemId(null);
+    setNewItem({ 
+      name_en: '', name_ar: '', description_en: '', description_ar: '', price: '', 
+      category_en: CATEGORIES[0].en, category_ar: CATEGORIES[0].ar, is_popular: false 
+    });
+    setImageFile(null);
+    const fileInput = document.getElementById('image-upload');
+    if (fileInput) fileInput.value = '';
   }
 
   async function handleDelete(id) {
@@ -297,7 +327,8 @@ export default function AdminPage() {
         <div className="lg:col-span-1">
           <div className="glass-card p-6 rounded-2xl sticky top-24">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Plus className="text-primary-500" /> {isAr ? 'إضافة صنف جديد' : 'Add New Menu Item'}
+              {editingItemId ? <Edit className="text-primary-500" /> : <Plus className="text-primary-500" />}
+              {editingItemId ? (isAr ? 'تعديل الصنف' : 'Edit Menu Item') : (isAr ? 'إضافة صنف جديد' : 'Add New Menu Item')}
             </h2>
             <form onSubmit={handleAddItem} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -369,8 +400,14 @@ export default function AdminPage() {
               </div>
 
               <button disabled={saving} type="submit" className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 rounded transition-colors flex justify-center items-center gap-2 mt-4">
-                {saving ? <Loader2 className="animate-spin h-5 w-5" /> : (isAr ? 'حفظ الصنف' : 'Save Item')}
+                {saving ? <Loader2 className="animate-spin h-5 w-5" /> : (editingItemId ? (isAr ? 'تحديث الصنف' : 'Update Item') : (isAr ? 'حفظ الصنف' : 'Save Item'))}
               </button>
+              
+              {editingItemId && (
+                <button type="button" onClick={handleCancelEdit} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded transition-colors flex justify-center items-center gap-2 mt-2">
+                  {isAr ? 'إلغاء التعديل' : 'Cancel Edit'}
+                </button>
+              )}
             </form>
           </div>
         </div>
@@ -412,6 +449,9 @@ export default function AdminPage() {
                     className={`p-2 rounded-lg transition-colors ${item.is_popular ? 'text-yellow-400 bg-yellow-50 hover:bg-yellow-100' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-50'}`}
                   >
                     <Star className={`h-5 w-5 ${item.is_popular ? 'fill-current' : ''}`} />
+                  </button>
+                  <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                    <Edit className="h-5 w-5" />
                   </button>
                   <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                     <Trash2 className="h-5 w-5" />
