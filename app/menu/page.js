@@ -1,32 +1,18 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/components/LanguageProvider';
-import { useCart } from '@/components/CartProvider';
-import { Loader2, ShoppingCart, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 
 export default function MenuPage() {
   const { lang } = useLanguage();
   const isAr = lang === 'ar';
-  const { addToCart } = useCart();
 
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedDesc, setExpandedDesc] = useState({});
-  const [session, setSession] = useState(null);
-  const [addedItems, setAddedItems] = useState({});
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      fetchMenu();
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
 
     async function fetchMenu() {
       const { data, error } = await supabase.from('menu_items').select('*').order('created_at', { ascending: false });
@@ -42,18 +28,9 @@ export default function MenuPage() {
     setExpandedDesc(prev => ({...prev, [id]: !prev[id]}));
   };
 
-  const handleAddToCart = (item) => {
-    addToCart(item);
-    setAddedItems(prev => ({...prev, [item.id]: true}));
-    setTimeout(() => {
-      setAddedItems(prev => ({...prev, [item.id]: false}));
-    }, 1500);
-  };
-
   const MenuItemCard = ({ item }) => {
     const desc = isAr ? item.description_ar : item.description_en;
     const isExpanded = expandedDesc[item.id];
-    const isAdded = addedItems[item.id];
 
     return (
       <div className="glass-card rounded-3xl overflow-hidden group hover:shadow-2xl transition-all duration-300 flex flex-col w-full border border-gray-100">
@@ -95,22 +72,6 @@ export default function MenuPage() {
               </button>
             )}
           </div>
-          
-          <button 
-            onClick={() => handleAddToCart(item)}
-            disabled={isAdded}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 mt-auto shadow-sm hover:shadow-md cursor-pointer ${
-              isAdded 
-                ? 'bg-green-500 text-white' 
-                : 'bg-primary-500 hover:bg-primary-600 text-white'
-            }`}
-          >
-            {isAdded ? (
-              <><Check className="h-5 w-5 animate-in zoom-in" /> {isAr ? 'تمت الإضافة!' : 'Added!'}</>
-            ) : (
-              <><ShoppingCart className="h-5 w-5" /> {isAr ? 'أضف للسلة' : 'Add to Cart'}</>
-            )}
-          </button>
         </div>
       </div>
     );
